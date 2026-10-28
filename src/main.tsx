@@ -56,7 +56,53 @@ function ContactForm() {
   return <form ref={formRef} noValidate onSubmit={submit} onChange={() => { if (status) setStatus(''); }}><div className="form-row">{[{ name: 'name', label: 'Имя', placeholder: 'Как к вам обращаться?', type: 'text' }, { name: 'email', label: 'Рабочая почта', placeholder: 'имя@компания.ru', type: 'email' }].map(f => <label key={f.name} htmlFor={f.name}>{f.label}<input id={f.name} name={f.name} type={f.type} required autoComplete={f.name === 'name' ? 'name' : 'email'} placeholder={f.placeholder} aria-invalid={!!errors[f.name]} aria-describedby={errors[f.name] ? `${f.name}-error` : undefined}/>{errors[f.name] && <span className="error" id={`${f.name}-error`}>{errors[f.name]}</span>}</label>)}</div><label htmlFor="message">Описание задачи<textarea id="message" name="message" rows={3} required placeholder="Что хотите упростить?" aria-invalid={!!errors.message} aria-describedby={errors.message ? 'message-error' : undefined}/>{errors.message && <span id="message-error" className="error">{errors.message}</span>}</label><div className="form-bottom"><p>Подготовим письмо в вашем почтовом приложении.</p><button className="button dark" type="submit">Подготовить обращение <Arrow /></button></div>{status && <p className="form-status" role="status">{status}</p>}{status && CONTACT_EMAIL && <a className="button" href={mailLink(formRef.current)}>Открыть почтовое приложение <Arrow /></a>}</form>;
 }
 function App() {
-  return <><a className="skip-link" href="#main">К содержанию</a><section className="hero" aria-label="NEXORA — интеллектуальная автоматизация"><Background/><header className="header"><a className="brand" href="#" aria-label="NEXORA — на главную">NEXORA<sup>®</sup></a><nav aria-label="Основная навигация"><a href="#solutions">Решения</a><a href="#approach">Подход</a><a href="#demonstration">Демонстрация</a><a href="#about">О нас</a></nav><a className="button contact-top" href="#contact">Связаться <Arrow circle/></a></header><main id="main" className="hero-layout"><div className="hero-copy"><p className="eyebrow">Интеллектуальная<br/>автоматизация</p><h1>Сложное.<br/>Проще.</h1><p className="lead">Соединяем системы, автоматизируем процессы и внедряем ИИ там, где он действительно полезен.</p><a className="button" href="#solutions">Наши решения <Arrow circle/></a></div><div className="service-list">{solutions.map((s, i) => <a href={`#solution-${i + 1}`} key={s.title}><span className="number">0{i + 1}</span><div><h2>{s.title}</h2><p>{s.desc}</p></div><Arrow/></a>)}</div><div className="hero-bottom"><Demo/><aside className="task"><span className="task-number">04</span><h2>Есть задача?</h2><p>Найдём, что можно упростить в вашем бизнесе.</p><a href="#contact" className="button dark">Обсудить проект <Arrow/></a></aside></div></main></section><div className="sections">
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const returnFocus = useRef<HTMLElement | null>(null);
+  const previousOverflow = useRef('');
+  const openDemo = () => {
+    const dialog = dialogRef.current;
+    if (!dialog || dialog.open) return;
+    returnFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    previousOverflow.current = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    dialog.showModal();
+  };
+  const closeDemo = () => dialogRef.current?.close();
+  const restorePage = () => {
+    document.body.style.overflow = previousOverflow.current;
+    returnFocus.current?.focus({ preventScroll: true });
+  };
+  useEffect(() => {
+    const handleHash = () => { if (window.location.hash === '#interactive-demo') openDemo(); };
+    handleHash();
+    window.addEventListener('hashchange', handleHash);
+    return () => { window.removeEventListener('hashchange', handleHash); if (dialogRef.current?.open) document.body.style.overflow = previousOverflow.current; };
+  }, []);
+  return <><a className="skip-link" href="#main">К содержанию</a>
+  <section className="hero hero-zero" aria-label="NEXORA — интеллектуальная автоматизация">
+    <Background/>
+    <header className="header">
+      <a className="brand" href="#" aria-label="NEXORA — на главную">nexora</a>
+      <nav aria-label="Основная навигация"><a href="#solutions">Решения</a><a href="#approach">Подход</a><a href="#about">О нас</a></nav>
+      <a className="button contact-top" href="#contact">Связаться <Arrow/></a>
+    </header>
+    <main id="main" className="hero-layout">
+      <div className="hero-copy"><h1>Сложное.<br/>Проще.</h1><p className="lead">Автоматизация процессов с помощью ИИ</p></div>
+      <div className="service-list">{solutions.map((s, i) => <a href={`#solution-${i + 1}`} key={s.title}><span className="number">0{i + 1}<span aria-hidden="true"> /</span></span><h2>{s.title}</h2><Arrow/></a>)}</div>
+      <div className="hero-bottom"><button className="button demo-trigger" type="button" onClick={openDemo} aria-haspopup="dialog">Демонстрация процесса <Arrow/></button><a className="button project-trigger" href="#contact">Обсудить проект <Arrow/></a></div>
+    </main>
+  </section>
+  <dialog ref={dialogRef} className="demo-dialog" aria-labelledby="demo-dialog-title" onClose={restorePage} onKeyDown={event => {
+    if (event.key !== 'Tab') return;
+    const controls = Array.from(event.currentTarget.querySelectorAll<HTMLElement>('button:not([disabled]), a[href], input:not([disabled]), textarea:not([disabled]), [tabindex="0"]')).filter(element => element.getClientRects().length > 0);
+    const first = controls[0], last = controls[controls.length - 1];
+    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+  }}>
+    <div className="dialog-heading"><h2 id="demo-dialog-title">Демонстрация процесса</h2><button type="button" className="dialog-close" onClick={closeDemo} autoFocus aria-label="Закрыть демонстрацию">Закрыть <span aria-hidden="true">×</span></button></div>
+    <Demo/>
+  </dialog>
+<div className="sections">
   <section id="solutions" className="content-section solutions-section">
     <div className="section-heading"><span className="kicker">01 / Решения</span><h2>Системы связаны.<br/>Команда свободнее.</h2></div>
     <div className="solution-grid">{solutions.map((s, i) => <article id={`solution-${i + 1}`} key={s.title}><a className="solution-link" href="#contact"><span className="solution-number">0{i + 1}</span><h3>{i === 0 ? 'Автоматизация процессов' : s.title}</h3><p>{s.detail}</p><Arrow/></a></article>)}</div>
@@ -71,7 +117,7 @@ function App() {
   </section>
   <section id="demonstration" className="content-section demo-description">
     <span className="kicker">03 / Демонстрация</span>
-    <div className="demo-surface"><div className="demo-surface-heading"><span className="surface-label">Заявка → Анализ → Результат</span><span className="surface-label">Один процесс — два подхода</span></div><h2>Одна заявка.<br/>Два пути к результату.</h2><div className="demo-surface-bottom"><div><p>Сотрудник проверяет информацию и переносит данные вручную. Система извлекает их, проверяет по правилам и передаёт готовый результат человеку.</p><p className="note">Посмотрите оба сценария в интерактивной панели на первом экране. Скорость анимации условная и не отражает реальные сроки обработки.</p></div><a className="button" href="#interactive-demo">Попробовать сценарий <Arrow circle/></a></div></div>
+    <div className="demo-surface"><div className="demo-surface-heading"><span className="surface-label">Заявка → Анализ → Результат</span><span className="surface-label">Один процесс — два подхода</span></div><h2>Одна заявка.<br/>Два пути к результату.</h2><div className="demo-surface-bottom"><div><p>Сотрудник проверяет информацию и переносит данные вручную. Система извлекает их, проверяет по правилам и передаёт готовый результат человеку.</p><p className="note">Посмотрите оба сценария в интерактивной панели на первом экране. Скорость анимации условная и не отражает реальные сроки обработки.</p></div><a className="button" href="#interactive-demo" onClick={event => { event.preventDefault(); openDemo(); }} aria-haspopup="dialog">Попробовать сценарий <Arrow circle/></a></div></div>
   </section>
   <section id="about" className="content-section about">
     <span className="kicker">04 / О нас</span><div><h2>Автоматизация<br/>должна упрощать.</h2><p>NEXORA — студия интеллектуальной автоматизации. Мы создаём решения, которые помогают компаниям сокращать ручные операции и эффективнее использовать существующие инструменты.</p></div>
