@@ -16,7 +16,7 @@ function Background() {
   const [reduced, setReduced] = useState(() => matchMedia('(prefers-reduced-motion: reduce)').matches);
   const [failed, setFailed] = useState(false);
   useEffect(() => { const query = matchMedia('(prefers-reduced-motion: reduce)'); const update = () => setReduced(query.matches); query.addEventListener('change', update); return () => query.removeEventListener('change', update); }, []);
-  return <div className="background" aria-hidden="true"><img src="/media/nexora-poster.jpg" alt="" fetchPriority="high" />{!reduced && !failed && <video autoPlay muted playsInline loop preload="metadata" poster="/media/nexora-poster.jpg" onError={() => setFailed(true)} onCanPlay={event => { void event.currentTarget.play().catch(() => setFailed(true)); }}><source src="/media/nexora-animation.mp4" type="video/mp4" /></video>}</div>;
+  return <div className="background" aria-hidden="true"><img src={`${import.meta.env.BASE_URL}media/nexora-poster.jpg`} alt="" fetchPriority="high" />{!reduced && !failed && <video autoPlay muted playsInline loop preload="metadata" poster={`${import.meta.env.BASE_URL}media/nexora-poster.jpg`} onError={() => setFailed(true)} onCanPlay={event => { void event.currentTarget.play().catch(() => setFailed(true)); }}><source src={`${import.meta.env.BASE_URL}media/nexora-animation.mp4`} type="video/mp4" /></video>}</div>;
 }
 function Demo() {
   const [elapsed, setElapsed] = useState(-1);
